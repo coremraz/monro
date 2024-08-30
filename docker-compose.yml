@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   nginx:
     image: nginx:latest
@@ -6,19 +8,21 @@ services:
       - ./_docker/nginx/conf.d/:/etc/nginx/conf.d/
     ports:
       - "5555:80"
+      - "8080:8080"
     depends_on:
       - app
     container_name: app_nginx
+
   app:
     build:
       context: .
       dockerfile: _docker/app/Dockerfile
-    image: php:8.2-fpm
     volumes:
       - ./backend:/var/www
     depends_on:
       - db
     container_name: app
+
   db:
     image: mysql:latest
     restart: always
@@ -31,15 +35,19 @@ services:
       - 5353:3306
     command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
     container_name: app_db
+
   nodejs:
     image: node:latest
     container_name: app_node
+
   frontend:
     build:
-      context: ./frontend  # Путь к вашей папке с Vue.js
-      dockerfile: Dockerfile  # Создайте Dockerfile в папке frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     volumes:
-      - ./frontend:/app:cached  # Монтируйте папку frontend в контейнер
+      - ./frontend:/app
+    ports:
+      - "8081:8080"
     depends_on:
-      - nodejs  # Убедитесь, что nodejs запущен перед сборкой
+      - nodejs
     container_name: app_frontend
